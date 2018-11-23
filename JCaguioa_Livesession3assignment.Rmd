@@ -1,0 +1,180 @@
+---
+title: "JCaguioa_Livesession3assignment"
+author: "Joseph Caguioa"
+date: "11/19/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1: GitHub Cloning
+#### Use Git to clone https://github.com/caesar0301/awesome-public-datasets. Show code, commented out, for creating a new directory, navigating to the appropriate directory, and cloning the repository.
+
+```{r GitHubClone}
+# mkdir desktop/SMUDS/MSDS6306_DDS/Local_Repos
+# cd desktop/SMUDS/MSDS6306_DDS/Local_Repos
+# git clone https://github.com/awesomedata/awesome-public-datasets.git
+```
+
+------
+
+# Question 2: Data Summary
+#### *Part a*: In R, use read.table() or read.csv() to assign titanic.csv to df.
+
+```{r TitanicRead}
+# titanic.csv.zip extracted to same folder in unshown step.
+setwd("/Users/josephcaguioa/Desktop/SMUDS/MSDS6306_DDS/Local_Repos/awesome-public-datasets/Datasets")
+df <- read.csv("titanic.csv", header = TRUE, sep = ",")
+str(df)
+```
+
+#### *Part b*: Output the gender counts. Plot their frequencies.
+
+```{r TitanicGender}
+# Output counts of females and males.
+Gender <- df$Sex
+FemaleCount <- sum(Gender == "female")
+MaleCount <- sum(Gender == "male")
+print(paste("There were", FemaleCount, "females and", MaleCount, "males aboard the Titanic.", sep = " "))
+
+# Plot female and male frequencies.
+Genders <- plot(Gender,
+           main = "People Aboard the Titanic, by Gender",
+           xlab = "Genders", ylab = "Number of People",
+           ylim = c(0,600),
+           col=c("lightcoral","lightblue")
+           )
+```
+
+#### *Part c*: Use an *apply* function to obtain the means of Age, Fare, and Survival.
+
+```{r TitanicApply, warning=FALSE}
+# Use an *apply function to obtain means.
+MeansList <- sapply(df, mean, na.rm=TRUE)
+
+# Obtain indices on relevant columns for output.
+AFSIndices <- vector("integer", 3)
+AFSIndices[1] <- which(colnames(df) == "Survived")
+AFSIndices[2] <- which(colnames(df) == "Age")
+AFSIndices[3] <- which(colnames(df) == "Fare")
+print(round(MeansList[AFSIndices], 2))
+```
+
+------
+
+# Question 3: Function Building
+#### *Parts a-d*: Create helper function(x){}. 
+
+```{r HelpFunction}
+SleepDataFunc <- function(x) {
+
+  # Part a: Create objects for median Age, minimum and maximum Duration of sleep, and mean and standard deviation of RSES.
+  MedianAge <- median(x$Age, na.rm = TRUE)
+  MinSleep <- min(x$Duration, na.rm = TRUE)
+  MaxSleep <- max(x$Duration, na.rm = TRUE)
+  MeanRses <- mean(x$RSES, na.rm = TRUE)
+  SdRes <- sd(x$RSES, na.rm = TRUE)
+  
+  # Part b: Create report data frame.
+  report <- data.frame(MedianAge,
+                       MeanRses / 5,
+                       SdRes / 5,
+                       MaxSleep - MinSleep)
+  
+  # Part c: Change column names.
+  names(report) <- c("MedianAge",
+                     "SelfEsteem",
+                     "SE_SD",
+                     "DurationRange")
+  
+  # Part d: Round report.
+  round(report, 2)
+}
+```
+
+#### *Part e*: Run function on sleep_data_01.csv.
+
+```{r SleepRun}
+SleepUrl <- "http://talklab.psy.gla.ac.uk/L1_labs/lab_1/homework/sleep_data_01.csv"
+sleep_df <- read.csv(SleepUrl, header = TRUE, sep = ",")
+SleepDataFunc(sleep_df)
+```
+
+------
+
+# Question 4: FiveThirtyEight Data
+#### *Part a*: Install fivethirtyeight.
+
+```{r FiveThirtyEightInstall, warning=FALSE}
+install.packages("fivethirtyeight", repos = "https://github.com/rudeboybert/fivethirtyeight/")
+library("fivethirtyeight")
+```
+
+#### *Part b*: Get 22nd data set.
+
+```{r TheTwentySecond}
+data(package = "fivethirtyeight")
+df <- college_recent_grads
+```
+
+#### *Part c*: Write URL.
+
+```{r TheTwentySecondUrl}
+# http://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/
+```
+
+#### *Part d*: Give dimensions and column names.
+
+```{r TwentySecondStructure}
+dim(df)
+names(df)
+```
+
+------
+
+# Question 5: Data Summary
+#### *Part a*: Get column names and number of columns.
+
+```{r ColumnInformation}
+colnames(df)
+ncol(df)
+```
+
+#### *Part b*: Count unique major_category, assign to major_count.
+
+```{r MajorCategories, message = FALSE}
+library(dplyr)
+major_count <- df %>% group_by(major_category) %>%
+  summarise(frequency = length(major_category))
+print(major_count)
+```
+
+#### *Part c*: Make barplot of major_count.
+
+```{r MajorCountPlot, fig.align = "center"}
+barplot(major_count$frequency,
+        names.arg = major_count$major_category,
+        horiz = TRUE, axes = TRUE, las=2,
+        xlim = c(0,30), xlab = "Frequency", ylab = "Categories",
+        main = "Number of Majors by Category",
+        col = "steelblue")
+```
+
+#### *Part d*: Write data to csv without row labels.
+
+```{r FiveThirtyEightCsv}
+write.csv(df, file = "fivethirtyeight_recentgrads.csv", row.names = FALSE)
+```
+
+------
+
+# Question 6: Codebook
+#### *Parts a-d*: Create GitHub MSDS homework with README.md and post 'fivethirtyeight' associated documents.
+
+```{r Codebook}
+
+# GitHub repo found here: https://github.com/J-Caguioa/DSHomework.git
+
+```

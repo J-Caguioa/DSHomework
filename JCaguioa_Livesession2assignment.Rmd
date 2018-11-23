@@ -1,0 +1,129 @@
+---
+title: "JCaguioa_Livesession2assignment"
+author: "Joseph Caguioa"
+date: "11/12/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1
+#### *Part a*: What is a basic workflow for reproducible research?
+
+Per pg 19-21 of Gandrud's *Reproducible Research with R and RStudio, 2e* and Unit 1.7 of Dr. McGee's lecture, the reproducible research workflow has three parts:
+
+>* data gathering
+* data analysis
+* results presentation
+
+Raw data is obtained by some means and digitized if in physical form. From there, it is explored, cleaned, and transformed for analysis. The resulting conclusions are presented using text file formats such as LaTeX and Markdown. This workflow is nonlinear. For example, feedback on a published article may influence how data is gathered on successive iterations of the research.
+
+#### *Part b*: What are five practical tips for making research reproducible?
+
+Per pg 22-28 of Gandrud's *Reproducible Research with R and RStudio, 2e* and Unit 1.8 of Dr. McGee's lecture, the five practical tips for reproducible research are as follows:
+
+1. Document everything necessary for someone to replicate the process.
+2. Store everything as text files.
+3. Make all of those files human readable.
+4. Explicitly link those files using replicable commands.
+5. Create a plan to organize, store, and make files available for others to access. (And of course, follow it.)
+
+#### *Part c*: Give an example of how you might implement each tip.
+
+1. A README should explain the steps performed in the workflow (how the data was gathered and analyzed, and how the results were presented). For example if R is used, its sessionInfo() printout is important due to potential differences between R versions, operating systems, and downloaded packages.
+2. While the Microsoft Office Suite's products are convenient, using simpler file types like .csv (storage), .R (analysis), and .tex or .md (presentation) future-proofs the research by ensuring that something can open them.
+3. Make the code understandable by both man and machine. Write detailed comments explaining files, functions, and any ambiguous code. Use descriptive variable names.
+4. Using packages that others have access to, call explicit commands like read.csv() or source_url() to tie files together.
+5. Organize files in a hierachical structure, and store them in a publically accessible location like a GitHub repository.
+
+#### *Part d*: Which one of these do you think will be the most difficult?
+
+I believe that tip number 1, documenting absolutely everything (or as much as needed for reproducibility) will pose the biggest challenge. The popular "explain how to make a peanut butter and jelly sandwich" writing prompt exemplifies how tricky communicating even a relatively simple idea can be. Things that may seem blatantly obvious to the researcher, especially if he or she works deeply on a project for a period of time, may not be so for others looking at it with fresh eyes. It would be very easy for small yet significant details not to make it from the researcher's brain to the written documentation.
+
+However, in practice I currently find tip number five the most difficult. Not having worked with Git or GitHub before and also being relatively new to Unix commands, the learning curve feels remarkably steep.
+
+------
+
+# Question 2
+
+#### *Part a*: Plot function for monthly temperature.
+
+```{r air_hist1, echo=TRUE, fig.align='center'}
+# Place variables of interest into vectors.
+Temperature <- airquality$Temp
+Month <- airquality$Month
+
+# Create a scatterplot of Temperature vs Month. Include a title and axes labels.
+plot(x=Month, y=Temperature,
+     main="Temperature by Month",
+     xlab="Month", ylab="Temperature",
+     ylim=c(50,100),
+     col="red"
+     )
+```
+
+The airquality dataset contains daily air quality measurements in New York from May to September 1973. This scatterplot plots the maximum daily temperatures (in Fahrenheit) taken at La Guardia Airport by month.
+
+The above plot is recreated below using ggplot2 for practice. To account for multiple days each month having the same maximum daily temperature, the transparency of all points is increased so that temperatures observed multiple times are overlaid into darker points.
+
+```{r air_hist1gg, echo=TRUE, fig.align='center', message=FALSE}
+# Load necessary libraries. Library output suppressed using message=FALSE.
+library(ggplot2)
+library(dplyr)
+
+airquality %>% ggplot(aes(x=Month, y=Temp)) + 
+  geom_point(col='red', shape=1, alpha=0.5) +
+  labs(title="Temperature by Month", 
+         x="Month", y="Temperature") +
+  theme(plot.title=element_text(hjust=0.5))
+```
+
+#### *Part b*: Plot function for ozone.
+
+```{r air_hist2, echo=TRUE, fig.align='center'}
+# Place variable of interest into vector. Temperature is already available in the workspace.
+Ozone <- airquality$Ozone
+
+# Create a scatterplot of Ozone vs Temperature. Include a title and axes labels.
+plot(x=Temperature, y=Ozone,
+     main="Temperature vs Ozone",
+     xlab="Temperature", ylab="Ozone",
+     xlim=c(55,100), ylim=c(0, 175),
+     col="blue")
+```
+
+This scatterplot plots the maximum daily temperatures (in degrees Fahrenheit) taken at La Guardia airport against the mean ozone (ppb) from 1300 to 1500 hours at Roosevelt Island.
+
+#### *Part c*: Translate to RMarkdown.
+
+Please reference Questions 2a and 2b, included in this RMarkdown and the associated HTML.
+
+------
+
+# Question 3
+
+#### *Part a*: Plot function for temperature and pressure.
+
+```{r knitr_cars1, echo = TRUE, fig.align='center'}
+plot(x=pressure$pressure, y=pressure$temperature,
+     main="Temperature vs Pressure",
+     xlab="Pressure", ylab="Temperature")
+```
+
+The pressure dataset shows the relationship between temperature (in Celsius) and vapor pressure of mercury (in mmHg). An interpretation of the above scatterplot of that dataset shows that an initial slight increase in pressure above 0 mmHg drastically increases temperature. The temperature increase quickly evens out per increase of vapor pressure, creating the shape of a logarithmic curve.
+
+#### *Part b*: Plot function that reverses axes.
+
+```{r knitr_cars2, echo = TRUE, fig.align='center'}
+plot(x=pressure$temperature, y=pressure$pressure,
+     main="Pressure vs Temperature",
+     xlab="Temperature",ylab="Pressure")
+```
+
+This scatterplot flips the axes of the graph in Question 3a. As temperature increases, the pressure also slowly increases until approximately 200 degrees Celsius, where the curve shows noticeable exponential growth. This behavior in the curve shapes makes sense because logarithmic and exponential functions are inverses.
+
+#### *Part c*: Transferred into RMarkdown script.
+
+Please reference Questions 3a and 3b, included in this RMarkdown and the associated HTML.
