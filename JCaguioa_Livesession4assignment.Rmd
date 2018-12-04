@@ -1,0 +1,97 @@
+---
+title: "JCaguioa_Livesession4assignment"
+author: "Joseph Caguioa"
+date: "11/27/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo=TRUE, warning=FALSE, message=FALSE)
+options(width = 100)
+```
+
+# Question 1: Harry Potter Cast
+
+```{r hp_cast}
+library(rvest)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(stringr)
+
+# Obtain Cast table.
+deathlyhallows2_imdb <- read_html("https://www.imdb.com/title/tt1201607/fullcredits?ref_=tt_ql_1")
+dh2_table <- html_nodes(deathlyhallows2_imdb, "table")
+cast_and_crew <- html_table(dh2_table)
+main_cast <- data.frame(cast_and_crew[3])
+
+# Remove unneeded columns, rename remaining ones.
+main_cast <- select(main_cast, -X1, -X3)
+names(main_cast) <- c("Actor", "Character")
+
+# Remove unneeded newline characters.
+main_cast$Character <- str_replace_all(main_cast$Character, "[\r\n]", "")
+# Trim extra spaces (such as "     (uncredited)") within strings.
+main_cast$Character <- str_replace_all(main_cast$Character, "\\s+", " ")
+# Remove row with "Rest of cast listed alphabetically:"
+main_cast <- main_cast[- grep("alphabetically", main_cast$Actor),]
+# Remove row(s) with empty Actor cell.
+main_cast <- main_cast[nzchar(main_cast$Actor), ]
+# Use regex to divide Actor, where Surname only contains one word.
+main_cast <- main_cast %>% separate(Actor, into = c("FirstName", "Surname"), sep = " (?=[^ ]+$)", extra = "merge")
+
+row.names(main_cast) <- NULL
+head(main_cast, 10)
+
+```
+
+
+# Question 2: SportsBall
+
+```{r spurs}
+
+# Obtain Shooting Statistics table for Spurs.
+espn_spurs <- read_html("http://www.espn.com/nba/team/stats/_/name/sa/san-antonio-spurs")
+tables <- html_nodes(espn_spurs, "table")
+spurs_tables <- html_table(tables)
+shooting_stats <- data.frame(spurs_tables[2])
+
+# Remove "SHOOTING STATISTICS" and "Totals" rows.
+shooting_stats <- shooting_stats[!(shooting_stats$X1 %in% c("SHOOTING STATISTICS", "Totals")), ]
+
+# Use Row 2 as column names.
+names(shooting_stats) <- as.character(unlist(shooting_stats[1, ]))
+shooting_stats <- shooting_stats[-1, ]
+
+# Divide PLAYER column.
+shooting_stats <- shooting_stats %>% separate(PLAYER, into = c("Name", "Position"), sep = ", ")
+
+# Convert statistics columns to numeric.
+numeric_columns <- !(names(shooting_stats) %in% c("Name", "Position"))
+shooting_stats[numeric_columns] <- sapply(shooting_stats[numeric_columns], as.numeric)
+# Convert Position column to factor.
+shooting_stats$Position <- as.factor(shooting_stats$Position)
+sapply(shooting_stats, class)
+
+# Create bar graph of Field Goals Percentage Per Game (FG%)
+fgp <- shooting_stats %>% ggplot(aes(x = reorder(Name, `FG%`), y = `FG%`, fill = Position)) + 
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = `FG%`),
+            hjust = "inward",
+            size = 2) +
+  coord_flip() +
+  xlab("Player Name") + 
+  ylab("Field Goals Percentage Per Game") +
+  ggtitle("ESPN's San Antonio Spurs 2018-19\nCurrent Field Goal Percentage Stats") +
+  scale_fill_brewer(palette = "Pastel2") +
+  theme(plot.title = element_text(hjust = 0.5),
+        legend.position = "right",
+        legend.background = element_rect(fill = "gray90", 
+                                         size = .5, 
+                                         linetype = "dotted"),
+        panel.border = element_blank(),
+        axis.ticks = element_blank())
+
+fgp
+
+```
