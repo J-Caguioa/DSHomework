@@ -1,0 +1,109 @@
+---
+title: "JCaguioa_LiveSession5Assignment"
+author: "Joseph Caguioa"
+date: "12/4/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 1: Data Munging
+
+```{r munge2016, message=FALSE}
+
+library(tidyr)
+library(dplyr)
+
+# Part a: Import file, rename columns.
+df <- read.csv2("./yob2016.txt", header = FALSE, check.names = FALSE)
+colnames(df) <- c("Name", "Gender", "Births_2016")
+
+# Part b: Display summary and structure.
+summary(df)
+str(df)
+
+# Part c: Find erroneous name.
+aWeirdName <- grep("y{3}", df$Name, value = TRUE)
+print(aWeirdName)
+
+# Part d: Begone, Fionayyy!
+y2016 <- data.frame(df[df$Name != 'Fionayyy', ])
+
+```
+
+***
+
+## Question 2: Data Merging
+
+```{r merge}
+
+# Part a: Import file, rename columns.
+y2015 <- read.csv("./yob2015.txt", header = FALSE, check.names = FALSE)
+colnames(y2015) <- c("Name", "Gender", "Births_2015")
+
+# Part b: Display last 10 rows.
+tail(y2015, 10)
+
+```
+
+Rows 33054-33063, the last ten of the "y2015" dataframe, all describe _"popular"_ boy names beginning with the letter "Z" that were each given to five newborns in 2015. I have never heard of any of these, and will be very shocked if I meet one in my lifetime. ~~It seems these unique-sounding names are not quite so unique, seeing as each one was assigned to five babies in 2015 alone.~~
+
+```{r mergeContd2}
+
+# Demonstrate non-unique problem with Name column.
+str(y2015)
+str(y2016)
+y2016[y2016$Name == "Joseph", ]
+
+```
+
+Attempting to merge as is gives errors because merging requires columns of unique values. When looking at str(y2015) and str(y2016), the number of levels in First_Name is less than the number of observations, indicating that some names are repeated (given as a unisex name). To work around this, Name and Gender are momentarily united to create a column of unique name-gender observations, and then separated again.
+
+```{r mergeContd3}
+
+# Part c: Merge dataframes, only keeping names with data for both years.
+# Temporarily unite Name and Gender for merging purposes.
+y2015_2 <- unite(y2015, NameGender, c(Name, Gender), remove = TRUE)
+y2016_2 <- unite(y2016, NameGender, c(Name, Gender), remove = TRUE)
+both_years <- merge(y2015_2, y2016_2, by = "NameGender", all = FALSE)
+
+# Separate Name and Gender columns again.
+final <- separate(both_years, col = "NameGender", into = c("Name", "Gender"), sep = "_", remove = TRUE)
+
+# Demonstrate that no columns contain NA values after merge.
+colSums(is.na(final))
+
+```
+
+***
+
+## Question 3: Data Summary
+
+```{r summary}
+
+# Part a: Create Total column.
+final$Total <- final$Births_2015 + final$Births_2016
+popular_named_kids <- sum(final$Total)
+cat("In 2015 and 2016 combined, ", popular_named_kids, " babies received popular names!", sep = "")
+
+# Part b: Top ten most popular names.
+sorted_final <- final %>% arrange(-Total)
+head(sorted_final, 10)
+
+# Part c: Top ten most popular girl names.
+sorted_girls <- sorted_final[sorted_final$Gender %in% "F", ]
+top_ten_girls <- sorted_girls[c(1:10), c(1,5)]
+top_ten_girls
+
+# Part d: Output top ten most popular girl names. Placed into same Unit_5_Homework folder.
+write.csv(top_ten_girls, "./top_girl_names.csv", row.names = FALSE)
+
+```
+
+***
+
+## Question 4: GitHub
+
+Please see the following repository on my GitHub: https://github.com/J-Caguioa/DSHomework. The Unit_5_Homework folder should contain this RMarkdown file, the knitted HTML, the referenced yob2015.txt and yob2016.txt raw documents, the top_girl_names.csv output, a codebook, and a custom css file aptly named custom_html.css.

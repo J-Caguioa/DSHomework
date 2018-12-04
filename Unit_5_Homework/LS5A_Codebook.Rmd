@@ -1,0 +1,96 @@
+---
+title: "LS5A_Codebook"
+author: "Joseph Caguioa"
+date: "12/4/2018"
+output: 
+  html_document:
+    css: "custom_html.css"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Codebook for Live Session 5 Assignment
+***
+
+Instructions per assignment:
+
+> Push at minimum your RMarkdown for this homework assignment and a Codebook to one of your GitHub repositories (you might place this in a Homework repo like last week).  The Codebook should contain a short definition of each object you create, and if creating multiple files, which file it is contained in.  You are welcome and encouraged to add other files—just make sure you have a description and directions that are helpful for the grader.
+
+***
+### Source Code
+***
+
+The two input files of raw data provided by the client, yob2015.txt and yob2016.txt, are comma-delimited tables of three unnamed columns. It is possible they were obtained from an [online database](https://www.ssa.gov/oact/babynames/) of popular baby names. The columns are labeled as follows:
+
+* Name: A first name. A factor of varying levels.
+* Gender: Sex assigned at birth. A factor of two levels, female (F) and male (M).
+* Births_201{y}: Amount of children (of a specified gender) given a name for a specified year. {y} represents the year's ending digit, 5 for 2015 and 6 for 2016. An integer.
+
+***
+### All Objects
+***
+
+The following objects, listed in order of appearance in JCaguioa_LiveSession5Assignment, are used to obtain the tidy dataset.
+
+* df: Dataframe holding raw yob2016.txt input.
+* aWeirdName: A misspelled, redundant name.
+* y2016: Cleaned version of df.
+* y2015: Dataframe holding yob2015.txt input.
+* y2015_2: Dataframe for intermediate merging step where Name and Gender are united to create a shared column of unique values.
+* y2016_2: Dataframe for intermediate merging step where Name and Gender are united to create a shared column of unique values.
+* both_years: Merged version of y2015_2 and y2016_2.
+* final: Dataframe with cleaned and merged versions of yob2015.txt and yob2016.txt.
+
+The following objects, listed in order of appearance in JCaguioa_LiveSession5Assignment, are used to answer questions of interest.
+
+* popular_named_kids: Integer showing how many total babies received popular names.
+* sorted_final: Sorted version of final showing most popular names.
+* sorted_girls: Subsetted version of sorted_final showing most popular names for only girls.
+* top_ten_girls: Dataframe subsetted from sorted_girls with top ten popular girl names and their totals in 2015 and 2016.
+
+***
+### Final Dataset
+***
+
+The final tidy dataset, final, includes five variables. Further sorting and subsetting are performed to answer specific questions, but the variables remain the same.
+
+* Name
+* Gender
+* Births_2015
+* Births_2016
+* Total: Amount of children given a name for 2015 and 2016 combined. An integer.
+
+The following variables were created in going from raw to tidy data:
+
+Variable Name   | Class     | In Final?
+:-------------- | :-------: | :--------:
+Name            | Factor    | Yes
+Gender          | Factor    | Yes
+NameGender      | Character | No
+Births_2015     | Integer   | Yes
+Births_2016     | Integer   | Yes
+Total           | Integer   | Yes
+
+A subsetted version of final, top_ten_girls, is outputted into top_girl_names.csv.
+
+***
+### Code for Tidy Dataset
+***
+
+```{r tidyup, eval = FALSE}
+
+# Tidy variable names, clean y2016.
+colnames(df) <- c("Name", "Gender", "Births_2016")
+y2016 <- data.frame(df[df$Name != 'Fionayyy', ])
+colnames(y2015) <- c("Name", "Gender", "Births_2015")
+
+# Merge dataframes into final and create Total column.
+y2015_2 <- unite(y2015, NameGender, c(Name, Gender), remove = TRUE)
+y2016_2 <- unite(y2016, NameGender, c(Name, Gender), remove = TRUE)
+both_years <- merge(y2015_2, y2016_2, by = "NameGender", all = FALSE)
+final <- separate(both_years, col = "NameGender", into = c("Name", "Gender"), sep = "_", remove = TRUE)
+final$Total <- final$Births_2015 + final$Births_2016
+
+```
