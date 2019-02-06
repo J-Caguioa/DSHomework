@@ -1,0 +1,112 @@
+---
+title: "Live Session 12 Assignment: Time Series"
+author: "Joseph Caguioa"
+date: "2/4/2019"
+output:
+  html_document:
+    theme: default
+    highlight: tango
+    toc: true
+    toc_depth: 3
+    toc_float:
+      collapsed: false
+---
+
+```{r setup, include=T, message=F, warning=F, results="hide"}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Load packages.
+package_list <- c("tidyverse", "fpp2", "dygraphs", "xts", "MuMIn", "kableExtra")
+lapply(package_list, library, character.only=T)
+
+```
+
+Note that no data is normalized in this document.
+
+# Q1: Brief Financial Data
+
+```{r q1, fig.align='center', message=F, warning=F}
+
+# 1a: Pull DAX index from EuStockMarkets.
+help(EuStockMarkets)
+dax <- EuStockMarkets[,"DAX"]
+
+# 1b: Plot DAX.
+plot(dax, main="Daily closing price of DAX, 1991-1998",
+     xlab="Year", ylab="Daily Closing Price",
+     col="blue")
+abline(v=1997, col="red")
+
+# 1c: Decompose DAX into multiplicative model.
+plot(decompose(dax, type="multiplicative"), 
+     cex.lab=0.75, cex.axis=0.75, col="blue")
+abline(v=1997, col="red")
+
+```
+
+# Q2: Temperature Data
+
+```{r q2, fig.align='center', message=F, warning=F}
+
+# 2a: Load maxtemp dataset.
+help(maxtemp)
+autoplot(maxtemp)
+
+# 2b: Subset to data after 1990.
+maxtemp_1990 <- window(maxtemp, start=1990)
+
+# 2c: Use SES to predict next 5 years.
+maxtemp_1990_ses <- ses(maxtemp_1990, h=5)
+plot(maxtemp_1990_ses, sub="Melbourne's Maximum Temperatures: Forecast with SES",
+     xlab="Year", ylab="Maximum Temperature (°C)")
+lines(fitted(maxtemp_1990_ses), col="blue")
+legend("topleft", legend=c("Historical Data", "Predicted Values"), col=c("black", "blue"),
+       box.lty=0, lty=1)
+
+# 2d: Use damped Holt's linear trend to predict next 5 years.
+maxtemp_1990_holt <- holt(maxtemp_1990, initial="optimal", damped=T, h=5)
+plot(maxtemp_1990_holt, sub="Melbourne's Maximum Temperatures: Forecast with Holt",
+     xlab="Year", ylab="Maximum Temperature (°C)")
+lines(fitted(maxtemp_1990_holt), col="blue")
+legend("topleft", legend=c("Historical Data", "Predicted Values"), col=c("black", "blue"),
+       box.lty=0, lty=1)
+
+# 2e: Compare AICc of ses() and holt().
+maxtemp_aic <- rbind(c("AIC", AIC(maxtemp_1990_ses$model), AIC(maxtemp_1990_holt$model)),
+                     c("AICc", AICc(maxtemp_1990_ses$model), AICc(maxtemp_1990_holt$model)))
+kable(maxtemp_aic, col.names=c("Criterion", "SES", "Holt"), row.names=F,
+      caption="Selection Criteria", table.attr="style='width:30%;'") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+```
+
+When considering the Akaike Information Criterion (AIC) or its alternative, the second-order Akaike Information Criterion (AICc), the selection method involves minimizing the selection criterion. In this case, the AIC/AICc of simple exponential smoothing (SES; 140.48/141.53) is lower than that of the damped Holt model (141.38/145.58). The ses() model is better.
+
+# Q3: The Wands Choose the Wizard
+
+```{r q3, fig.align='center', message=F, warning=F}
+
+# 3a: Load data frames.
+gregorovitch <- read_csv("Unit11TimeSeries_Gregorovitch.csv", col_names=c("Date", "Wands"))
+ollivander <- read_csv("Unit11TimeSeries_Ollivander.csv", col_names=c("Date", "Wands"))
+
+# 3b: Convert to Date class.
+gregorovitch$Date <- as.Date(gregorovitch$Date, format="%m/%d/%Y")
+ollivander$Date <- as.Date(ollivander$Date, format="%m/%d/%Y")
+
+# 3c: Convert data frames to xts, order by Date.
+gregorovitch_xts <- xts(gregorovitch$Wands, order.by=gregorovitch$Date)
+ollivander_xts <- xts(ollivander$Wands, order.by=ollivander$Date)
+
+# 3d: Bind xts objects and create dygraph.
+wands_xts <- merge(gregorovitch_xts, ollivander_xts)
+dygraph(wands_xts, main="Wands Sold from 1970-2016", xlab="Year", ylab="Wands Sold") %>%
+  dySeries(label=c("Gregorovitch")) %>% dySeries(label=c("Ollivander")) %>%
+  dyOptions(stackedGraph=T, colors=RColorBrewer::brewer.pal(2, "Set2")) %>%
+  dyRangeSelector() %>%
+  dyShading(from="1995-01-01", to="1999-01-01", color="#FF1C1C") %>%
+  dyHighlight() %>%
+  dyAxis("y", valueRange=c(0,4000)) %>%
+  dyLegend(width=400)
+
+```
